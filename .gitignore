@@ -1,0 +1,25 @@
+#Configuration files in the development environment
+.vscode
+.DS_Store
+
+#temporary file
+tmp
+temp
+*.tmp
+*.temp
+
+#intermediate results
+__pycache__
+*.pyc
+*.class
+*.d
+*.i
+*.o
+*.s
+
+#build dir
+/build
+
+#lib dir
+# /lib/*
+# !/lib/*.md

@@ -22,7 +22,6 @@ C++PyCMake 是一个简单的 C++ 项目框架，你不需要自己编写 cmake 
 - CMAKE的版本要求： `CMAKE_VERSION := 3.0`
 - 模块名： `MODULE_NAME := pycmake`
 - 模块类型（dlib/slib/bin）： `MODULE_TYPE := slib`
-- cpp版本： `MODULE_CPP_VERSION := 17`
 - 依赖的库名： `MODULE_DEPEND_LIB := lib1 lib2 `
 
 ### 编译和运行
@@ -34,6 +33,7 @@ C++PyCMake 是一个简单的 C++ 项目框架，你不需要自己编写 cmake 
 
 ##### 自动测试
 在`cmake_py`路径下，后处理脚本`post_process.py`已经写好自动测试的脚本；
+目前自动构建到执行测试流程适配linux,windows需自行替换`make`命令；
 直接运行 `cmake.py` 会直接按顺序执行test目录下的测试用例。
 
 ##### 手动编译

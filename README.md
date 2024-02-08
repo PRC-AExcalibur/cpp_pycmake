@@ -23,7 +23,6 @@ The root directory contains the following folders:
 - CMAKE version requirements: `CMAKE_VERSION := 3.0`.
 - Module name: `MODULE_NAME := pycmake`.
 - Module type (dlib/slib/bin): `MODULE_TYPE := slib`
-- Cpp version: `MODULE_CPP_VERSION := 17`
 - Dependent library names: `MODULE_DEPEND_LIB := lib1 lib2`
 
 ### Compile and run
@@ -35,6 +34,7 @@ Run `cmake.py` directly to get the compiled file under `build/output/`.
 
 ##### Automated testing
 Under the `cmake_py` path, the post-processing script `post_process.py` has been written to automate the tests;
+now the automatic build-to-execute test process is adapted to linux, and windows needs to replace the `make` command;
 Running `cmake.py` directly will execute the testcases in the test directory in order.
 
 ##### Manual compilation

@@ -25,7 +25,7 @@ def run_cmake(project_defs):
         shutil.copytree("../include/", "output/include")
 
 def run_make():
-    subprocess.run("make", shell=True, check=True)
+    subprocess.run("make -j4", shell=True, check=True)
 
 def run_bin(project_defs):
     print("\n***----- Start Running Bin -----***")

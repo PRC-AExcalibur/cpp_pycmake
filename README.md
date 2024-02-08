@@ -1,4 +1,5 @@
 # PyCMake C++ Project Framework Documentation
+# PyCMake C++ 项目框架文档(中文版详见README_zh.md)
 
 ### introduction
 C++PyCMake is a simple C++ project framework that you don't need to write cmake or makefile yourself. Run `cmake.py` will automatically generate the `CMakeLists.txt` cmake file and can automatically execute a customized compilation (test) process.
@@ -14,7 +15,7 @@ The root directory contains the following folders:
 
 - include: Contains all the header files (.h) that are shared across different source files
 - src: Contains all the source files (.cpp) implementing the functionalities defined in the header files
-- lib: Contains libaries or dependencies that the project depends on.
+- lib: Contains libaries or dependencies that the project depends on.(Already compiled .a .so .dll etc.)
 - test: Contains test cases for the project (when project is slib/dlib)
 
 ### Project customizable properties

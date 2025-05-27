@@ -6,6 +6,3 @@ MODULE_NAME := pycmake
 
 #type of module, dlib/slib/bin
 MODULE_TYPE := slib
-
-#libs of module depending
-MODULE_DEPEND_LIB := 

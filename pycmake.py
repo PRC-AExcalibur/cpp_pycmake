@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 from typing import List, Dict, Any
 
 class CMakeConfig:
@@ -210,6 +211,27 @@ def auto_test(directory_path = "/output/bin"):
 
     return test_results
 
+def parse_flag():
+    build_type_flags = ['DEBUG', 'RELEASE', 'RELWITHDEBINFO', 'MINSIZEREL']
+    stage = ['BUILD', 'TEST']
+    if len(sys.argv) >= 2 and sys.argv[1].upper() == "CLEAN":
+        if os.path.exists("build/"):
+            shutil.rmtree("build/")
+            print("----- clean build -----")
+            exit()
+    if len(sys.argv) == 3:
+        if sys.argv[1].upper() in build_type_flags and sys.argv[2].upper() in stage:
+            return sys.argv[1].upper(), sys.argv[2].upper()
+        else:
+            print("err: build_type/stage not found!")
+            exit()
+    return 'DEBUG', 'TEST'
+
 if __name__ == "__main__":
-    cmake_build("release", True)
-    auto_test("output/bin")
+    flags = parse_flag()
+    build_type_f = flags[0]
+    if flags[1] != "TEST":
+        cmake_build(build_type_f, False)
+    else:
+        cmake_build(build_type_f, True)
+        auto_test("output/bin")

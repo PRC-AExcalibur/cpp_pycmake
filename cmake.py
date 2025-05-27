@@ -24,24 +24,27 @@ def parse_key_value(content):
 
 def parse_flag():
     build_type_flags = ['DEBUG', 'RELEASE', 'RELWITHDEBINFO', 'MINSIZEREL']
-    if len(sys.argv) == 2:
+    stage = ['BUILD', 'TEST']
+    if len(sys.argv) == 3:
         if sys.argv[1].upper() == "CLEAN":
              if os.path.exists("build/"):
                 shutil.rmtree("build/")
                 print("----- clean build -----")
                 exit()
-        elif sys.argv[1].upper() in build_type_flags:
-            return sys.argv[1].upper()
+        elif sys.argv[1].upper() in build_type_flags and sys.argv[2].upper() in stage:
+            return sys.argv[1].upper(), sys.argv[2].upper()
         else:
-            print("err: build_type not found!")
+            print("err: build_type/stage not found!")
             exit()
-    return 'DEBUG'
+    return 'DEBUG', 'TEST'
 
 
 if __name__ == "__main__":
 
     print("***----- Start Cmake Python -----***")
-    build_type_f = parse_flag()
+    flags = parse_flag()
+    build_type_f = flags[0]
+    stage_type_f = flags[1]
 
     # prepare process
     cmake_py.pre_process.run()
@@ -120,4 +123,8 @@ if __name__ == "__main__":
             file.write(line + "\n")
 
     # post process
-    cmake_py.post_process.run(project_defs_dict)
+    # cmake_py.post_process.run(project_defs_dict)
+    cmake_py.post_process.run_cmake(project_defs_dict)
+    cmake_py.post_process.run_make()
+    if (stage_type_f == "TEST"):
+        cmake_py.post_process.run_test(build_type_f)

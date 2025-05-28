@@ -1,0 +1,22 @@
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Compile
+      run: python3 pycmake.py DEBUG BUILD
+    
+    - name: Test
+      run: python3 pycmake.py RELEASE TEST
+    
+    - name: Deploy
+      run: echo "Deploying to production..."

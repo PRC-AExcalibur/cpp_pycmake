@@ -35,8 +35,16 @@ C++PyCMake 是一个简单的 C++ 项目框架，你不需要自己编写 cmake 
   - `BUILD` : 只编译包文件`src/*`，忽略测试文件`test/*`
   - `TEST` : 编译全部文件，并直接按顺序执行`build/output/bin`目录下的测试用例。
 
+命令示例：
+``` bash
+python3 pycmake.py RELEASE TEST
+```
+
 ##### 手动编译
 重写`pycmake.py`中`main`，取消自动编译；
 运行 `cmake` 生成 Makefile（Linux）或其他文件（windows...）；
 运行`make` 或 `cmake --build .`编译项目；
 在`build/output/`下获取编译文件。
+
+##### CI/CD
+`.github/workflows/cicd.yml` 中对 github 进行了CI/CD流程适配，可以参考。

@@ -23,5 +23,7 @@ __pycache__
 #lib dir
 /lib/*
 !/lib/*.md
-# !/lib/gmock/
-# !/lib/gtest/
+
+# test lib
+!/lib/gmock/
+!/lib/gtest/

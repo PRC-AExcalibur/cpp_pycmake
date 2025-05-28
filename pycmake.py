@@ -221,8 +221,8 @@ def parse_flag():
     if len(sys.argv) >= 2 and sys.argv[1].upper() == "CLEAN":
         if os.path.exists("build/"):
             shutil.rmtree("build/")
-            print("----- clean build -----")
-            exit()
+        print("----- clean build -----")
+        exit()
     if len(sys.argv) == 3:
         if sys.argv[1].upper() in build_type_flags and sys.argv[2].upper() in stage:
             return sys.argv[1].upper(), sys.argv[2].upper()

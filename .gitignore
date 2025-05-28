@@ -21,5 +21,7 @@ __pycache__
 /build
 
 #lib dir
-!/lib/*.md
 /lib/*
+!/lib/*.md
+# !/lib/gmock/
+# !/lib/gtest/

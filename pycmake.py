@@ -91,14 +91,16 @@ def get_lib_paths(base_directory: str):
             include_paths.append(root.replace("\\", "/"))
         elif os.path.basename(root) == 'lib':
             for file in files:
-                if file.endswith(('.a', '.lib', '.so', '.dll')):
+                if file.endswith(('.lib', '.dll')):
                     lib_paths.append(os.path.join(root, os.path.splitext(file)[0]).replace("\\", "/"))
+                elif file.endswith(('.a', '.so')):
+                    lib_paths.append(os.path.join(root, file).replace("\\", "/"))
     return include_paths, lib_paths
 
 def generate_compile_target(target_name: str, target_type: str, library_list: List[str], library_dir: str, extend_src: List[str]) -> List[str]:
     """Generate CMake commands for a compile target."""
     cmd_list = []
-    cmd_list.append(f"link_directories({library_dir})")
+    cmd_list.append(f"link_directories(${{CMAKE_SOURCE_DIR}}/{library_dir})")
     target_type_cmd = {
         "bin": "add_executable",
         "slib": "add_library",
@@ -108,7 +110,7 @@ def generate_compile_target(target_name: str, target_type: str, library_list: Li
     target_str = f"{target_name} {'SHARED' if target_type == 'dlib' else ''} {' '.join(extend_src)} ${{src_list}}"
     cmd_list.append(f"{target_cmd}({target_str})")
     if library_list:
-        cmd_list.append(f"target_link_libraries({target_name} {' '.join(library_list)})")
+        cmd_list.append(f"target_link_libraries({target_name} ${{CMAKE_SOURCE_DIR}}/{' ${CMAKE_SOURCE_DIR}/'.join(library_list)})")
     return cmd_list
 
 def get_cpp_files(directory: str) -> List[str]:
@@ -153,7 +155,9 @@ def generate_cmakelist(build_type: str, cmake_version: str, module_name: str, mo
     target_settings = generate_compile_target(module_name, module_type, library_list, library_dir, extend_src)
     
     if with_test:
-        extend_test = generate_targets_from_test_dir("../test", ' '.join(extend_src), ''.join(include_paths), ''.join(library_list))
+        extend_test = generate_targets_from_test_dir("../test", ' '.join(extend_src), 
+                                                     '${CMAKE_SOURCE_DIR}/'+' ${CMAKE_SOURCE_DIR}/'.join(include_paths), 
+                                                     '${CMAKE_SOURCE_DIR}/'+' ${CMAKE_SOURCE_DIR}/'.join(library_list))
         return "\n".join(cmake_settings + ["\n"] + target_settings + ["\n"] + extend_test)
     else:
         return "\n".join(cmake_settings + ["\n"] + target_settings + ["\n"])

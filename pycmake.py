@@ -3,61 +3,54 @@ import shutil
 import subprocess
 import sys
 from typing import List, Dict, Any
+import configparser
 
 class CMakeConfig:
-    def __init__(self, cmake_version: str, module_name: str, build_type: str = 'DEBUG'):
-        self.cmake_version = cmake_version
-        self.module_name = module_name
+    class MyConfigParser(configparser.ConfigParser):
+        def optionxform(self, optionstr: str) -> str:
+            return optionstr  # 保持大小写
+    def __init__(self, config_file_path: str, build_type: str = 'DEBUG'):
+        config = self.MyConfigParser()
+        config.read(config_file_path)
+
+        self.cmake_version = config.get('project_config', 'CMAKE_VERSION')
+        self.module_name = config.get('project_config', 'MODULE_NAME')
+        self.module_type = config.get('project_config', 'MODULE_TYPE')
         self.build_type = build_type
-        
-        self.config = {
-            "CMAKE_CXX_STANDARD": "17",
-            "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-            "CMAKE_C_STANDARD": "17",
-            "CMAKE_C_STANDARD_REQUIRED": "ON",
-            "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
-            "CMAKE_CURRENT_BINARY_DIR": "../build",
-            "CMAKE_CURRENT_SOURCE_DIR": "../src",
-            "CMAKE_LIBRARY_PATH": "lib",
-            "EXECUTABLE_OUTPUT_PATH": "../build/output/bin",
-            "LIBRARY_OUTPUT_PATH": "../build/output/lib",
-            "CMAKE_BUILD_TYPE": build_type,
-            "CMAKE_INSTALL_PREFIX": "../build",
-            # "CMAKE_C_FLAGS": '',
-            # "CMAKE_CXX_FLAGS": ''
-            }
-        
-        build_lv = '-O0 '
-        if self.build_type == 'RELEASE':
-            build_lv = '-O2 '
-        
-        gnu_warn_str_ = "-Werror -Wall -Wextra -Wshadow -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable "
-        gnu_f_str_ = "-fPIC -pthread -fno-strict-aliasing -fno-delete-null-pointer-checks -fno-strict-overflow -fsigned-char "
-        self.gnu_c_str_ = '-std=gnu17 -ggdb3 ' + build_lv + gnu_warn_str_ + gnu_f_str_
-        self.gnu_cpp_str_ = '-std=gnu++17 -ggdb3 ' + build_lv + gnu_warn_str_ + gnu_f_str_
-        
-        msvc_warn_str_ = "/W4 /WX "
-        msvc_f_str_ = "/MD /EHsc /GR "
-        self.msvc_c_str_ = '/std:c17 /Zi ' + msvc_warn_str_ + msvc_f_str_
-        self.msvc_cpp_str_ = '/std:c++17 /Zi ' + msvc_warn_str_ + msvc_f_str_
-        
-        # self.config['CMAKE_C_FLAGS'] = msvc_c_str_
-        # self.config['CMAKE_CXX_FLAGS'] = msvc_cpp_str_
+
+        self.config = dict(config.items('cmake_config'))
+        self.config['CMAKE_BUILD_TYPE'] = self.build_type
+
+        build_lv = config.get('cmake_compile_flags', self.build_type.upper()) + ' '
+
+        c_compile_str = config.get('cmake_compile_flags', 'c_compile_str') + ' '
+        cpp_compile_str = config.get('cmake_compile_flags', 'cpp_compile_str') + ' '
+        gnu_warn_str_ = config.get('cmake_compile_flags', 'warn_str') + ' '
+        gnu_f_str_ = config.get('cmake_compile_flags', 'f_str') + ' '
+
+        self.c_str_ = c_compile_str + build_lv + gnu_warn_str_ + gnu_f_str_
+        self.cpp_str_ = cpp_compile_str + build_lv + gnu_warn_str_ + gnu_f_str_
+        self.test_str_ = config.get('cmake_compile_flags', 'test_path_str')
+
 
     def generate_compile_config(self):
-        """Generate CMake commands for compile configurations."""
         return f"""
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.gnu_cpp_str_}")
-    set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.gnu_c_str_}")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.msvc_cpp_str_}")
-    set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.msvc_c_str_}")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.msvc_cpp_str_}")
-    set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.msvc_c_str_}")
-endif()
-        """
+set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.cpp_str_}")
+set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.c_str_}")
+    """
+#         """Generate CMake commands for compile configurations."""
+#         return f"""
+# if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#     set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.gnu_cpp_str_}")
+#     set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.gnu_c_str_}")
+# elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#     set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.msvc_cpp_str_}")
+#     set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.msvc_c_str_}")
+# elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+#     set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} {self.msvc_cpp_str_}")
+#     set(CMAKE_C_FLAGS "${{CMAKE_C_FLAGS}} {self.msvc_c_str_}")
+# endif()
+#         """
 
     def get_cmake_cmd_list(self) -> List[str]:
         """Generate a list of CMake commands from the configuration."""
@@ -139,54 +132,35 @@ def generate_targets_from_test_dir(test_dir: str, src_str:str, include_str:str, 
     return targets
 
 
-def generate_cmakelist(build_type: str, cmake_version: str, module_name: str, module_type: str, with_test = True) -> str:
+def generate_cmakelist(config_file_path: str, build_type: str, with_test = True) -> str:
     """Generate the CMakeLists.txt content."""
-    library_dir = "../lib"
-    extend_src = get_cpp_files("../src")
+    cmake_config = CMakeConfig(config_file_path, build_type)
+    library_dir = cmake_config.get_config().get('CMAKE_LIBRARY_PATH', '../lib')
+    extend_src = get_cpp_files(cmake_config.get_config().get('CMAKE_CURRENT_SOURCE_DIR', '../src'))
     extend_src = [src.replace("\\", "/") for src in extend_src]
-    
     library_pair = get_lib_paths(library_dir)
-    # print(library_pair)
     include_paths = library_pair[0]
     library_list = library_pair[1]
 
-    cmake_config = CMakeConfig(cmake_version, module_name, build_type)
     cmake_settings = cmake_config.get_cmake_cmd_list() + [cmake_config.generate_compile_config()]
-    target_settings = generate_compile_target(module_name, module_type, library_list, library_dir, extend_src)
+    target_settings = generate_compile_target(cmake_config.module_name, cmake_config.module_type, library_list, library_dir, extend_src)
     
     if with_test:
-        extend_test = generate_targets_from_test_dir("../test", ' '.join(extend_src), 
+        extend_test = generate_targets_from_test_dir(cmake_config.test_str_, ' '.join(extend_src), 
                                                      '${CMAKE_SOURCE_DIR}/'+' ${CMAKE_SOURCE_DIR}/'.join(include_paths), 
                                                      '${CMAKE_SOURCE_DIR}/'+' ${CMAKE_SOURCE_DIR}/'.join(library_list))
         return "\n".join(cmake_settings + ["\n"] + target_settings + ["\n"] + extend_test)
     else:
         return "\n".join(cmake_settings + ["\n"] + target_settings + ["\n"])
 
-def mk_parse_key_value(content):
-    data_dict = {}
-    content = content.replace('\\\n', '')
-    # content = content.replace('    ', ' ')
-    content = content.replace('\t', ' ')
-    lines = content.split('\n')
-    for line in lines:
-        line = line.strip()
-        if ':=' in line:
-            key, value = line.split(':=', 1)
-            data_dict[key.strip()] = value.strip()
-    return data_dict
 
-def cmake_build(build_type = "DEBUG", with_test = True):
-    proj_dict = {}
-    with open('project_defs.mk', 'r') as file:
-        print("----- Start Parse Project Settings -----")
-        content = file.read()
-        proj_dict = mk_parse_key_value(content)
+def cmake_build(config_file_path, build_type = "DEBUG", with_test = True):
 
     if not os.path.exists("build/"):
         os.makedirs("build/")
     os.chdir("build/")
     
-    cmakelist_str = generate_cmakelist(build_type, proj_dict["CMAKE_VERSION"], proj_dict["MODULE_NAME"], proj_dict["MODULE_TYPE"], with_test)
+    cmakelist_str = generate_cmakelist("../"+config_file_path, build_type, with_test)
     with open("CMakeLists.txt", "w") as file:
         file.write(cmakelist_str)
 
@@ -232,10 +206,14 @@ def parse_flag():
     return 'DEBUG', 'TEST'
 
 if __name__ == "__main__":
+    config_file_path = "pycmake_config.ini"
+    if not os.path.exists(config_file_path):
+        print(f"Configuration file '{config_file_path}' not found.")
+        exit(1)
     flags = parse_flag()
     build_type_f = flags[0]
     if flags[1] != "TEST":
-        cmake_build(build_type_f, False)
+        cmake_build(config_file_path, build_type_f, False)
     else:
-        cmake_build(build_type_f, True)
+        cmake_build(config_file_path, build_type_f, True)
         auto_test("output/bin")

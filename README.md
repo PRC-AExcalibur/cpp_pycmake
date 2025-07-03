@@ -16,11 +16,45 @@ C++PyCMake 是一个简单的 C++ 项目框架，你不需要自己编写 cmake 
 - test：测试： 包含项目的测试用例(当项目为静态库/动态库)
 
 ### 项目自定义属性
-`project_defs.mk`定义了一些属性，可以自行扩展， 目前只允许`:=`赋值
+`pycmake_config.ini` 定义了一些项目属性，可以自行扩展。
 
-- CMAKE的版本要求： `CMAKE_VERSION := 3.0`
-- 模块名： `MODULE_NAME := pycmake`
-- 模块类型（dlib/slib/bin）： `MODULE_TYPE := slib`
+以下是该文件中的主要配置项（参数示例为可使用的状态，也可自行修改）：
+
+#### [project_config]
+- CMAKE 的版本要求： `CMAKE_VERSION = 3.0`
+- 模块名： `MODULE_NAME = pycmake`
+- 模块类型（dlib/slib/bin）： `MODULE_TYPE = slib`
+
+#### [cmake_config]
+- C++ 标准版本： `CMAKE_CXX_STANDARD = 17`
+- 是否强制要求 C++ 标准： `CMAKE_CXX_STANDARD_REQUIRED = ON`
+- C 标准版本： `CMAKE_C_STANDARD = 17`
+- 是否强制要求 C 标准： `CMAKE_C_STANDARD_REQUIRED = ON`
+- 是否生成位置无关代码： `CMAKE_POSITION_INDEPENDENT_CODE = ON`
+- 所有路径均为相对于 `/build` 的相对路径：
+  - 当前二进制目录： `CMAKE_CURRENT_BINARY_DIR = ../build/output`
+  - 当前源目录： `CMAKE_CURRENT_SOURCE_DIR = ../src`
+  - 库文件搜索路径： `CMAKE_LIBRARY_PATH = ../lib`
+  - 可执行文件输出路径： `EXECUTABLE_OUTPUT_PATH = ../build/output/bin`
+  - 库文件输出路径： `LIBRARY_OUTPUT_PATH = ../build/output/lib`
+  - 安装前缀： `CMAKE_INSTALL_PREFIX = ../build`
+
+#### [cmake_compile_flags]
+- 调试模式编译标志： `DEBUG = -O0`
+- 发布模式编译标志： `RELEASE = -O2`
+- 带调试信息的发布模式编译标志： `RELWITHDEBINFO = -O2 -g`
+- 最小体积发布模式编译标志： `MINSIZEREL = -Os`
+- C 语言编译字符串： `c_compile_str = -std=gnu17 -ggdb3`
+- C++ 语言编译字符串： `cpp_compile_str = -std=gnu++17 -ggdb3`
+- 警告相关编译字符串： `warn_str = -Werror -Wall -Wextra -Wshadow -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable`
+- 其他编译标志字符串： `f_str = -fPIC -pthread -fno-strict-aliasing -fno-delete-null-pointer-checks -fno-strict-overflow -fsigned-char`
+- 测试文件路径： `test_path_str = ../test`
+  
+#### 注释部分（根据编译器选择）
+- GNU 编译器警告相关编译字符串（注释）： `gnu_warn_str = -Werror -Wall -Wextra -Wshadow -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable`
+- GNU 编译器其他编译标志字符串（注释）： `gnu_f_str = -fPIC -pthread -fno-strict-aliasing -fno-delete-null-pointer-checks -fno-strict-overflow -fsigned-char`
+- MSVC 编译器警告相关编译字符串（注释）： `msvc_warn_str = /W4 /WX`
+- MSVC 编译器其他编译标志字符串（注释）： `msvc_f_str = /MD /EHsc /GR`
 
 ### 编译和运行
 在项目根目录下运行 `pycmake.py` 生成 `CMakeLists.txt`, 并自动编译，自动运行测试。

@@ -17,11 +17,45 @@ The root directory contains the following folders:
 - test: Contains test cases for the project (when project is slib/dlib)
 
 ### Project customizable properties
-`project_defs.mk` defines a number of attributes that can be extended, currently only `:=` assignments are allowed.
+`pycmake_config.ini` defines some project properties that can be extended as needed.
 
-- CMAKE version requirements: `CMAKE_VERSION := 3.0`.
-- Module name: `MODULE_NAME := pycmake`.
-- Module type (dlib/slib/bin): `MODULE_TYPE := slib`
+The following are the main configuration items in this file (the parameter examples are in a usable state and can also be modified):
+
+#### [project_config]
+- CMake version requirement: `CMAKE_VERSION = 3.0`
+- Module name: `MODULE_NAME = pycmake`
+- Module type (dlib/slib/bin): `MODULE_TYPE = slib`
+
+#### [cmake_config]
+- C++ standard version: `CMAKE_CXX_STANDARD = 17`
+- Whether to enforce the C++ standard: `CMAKE_CXX_STANDARD_REQUIRED = ON`
+- C standard version: `CMAKE_C_STANDARD = 17`
+- Whether to enforce the C standard: `CMAKE_C_STANDARD_REQUIRED = ON`
+- Whether to generate position-independent code: `CMAKE_POSITION_INDEPENDENT_CODE = ON`
+- All paths are relative to `/build`:
+  - Current binary directory: `CMAKE_CURRENT_BINARY_DIR = ../build/output`
+  - Current source directory: `CMAKE_CURRENT_SOURCE_DIR = ../src`
+  - Library search path: `CMAKE_LIBRARY_PATH = ../lib`
+  - Executable output path: `EXECUTABLE_OUTPUT_PATH = ../build/output/bin`
+  - Library output path: `LIBRARY_OUTPUT_PATH = ../build/output/lib`
+  - Installation prefix: `CMAKE_INSTALL_PREFIX = ../build`
+
+#### [cmake_compile_flags]
+- Debug mode compilation flags: `DEBUG = -O0`
+- Release mode compilation flags: `RELEASE = -O2`
+- Release mode with debug information compilation flags: `RELWITHDEBINFO = -O2 -g`
+- Minimum size release mode compilation flags: `MINSIZEREL = -Os`
+- C language compilation string: `c_compile_str = -std=gnu17 -ggdb3`
+- C++ language compilation string: `cpp_compile_str = -std=gnu++17 -ggdb3`
+- Warning-related compilation string: `warn_str = -Werror -Wall -Wextra -Wshadow -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable`
+- Other compilation flag string: `f_str = -fPIC -pthread -fno-strict-aliasing -fno-delete-null-pointer-checks -fno-strict-overflow -fsigned-char`
+- Test file path: `test_path_str = ../test`
+  
+#### Commented sections (Choose according to the compiler)
+- GNU compiler warning-related compilation string (commented): `gnu_warn_str = -Werror -Wall -Wextra -Wshadow -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable`
+- GNU compiler other compilation flag string (commented): `gnu_f_str = -fPIC -pthread -fno-strict-aliasing -fno-delete-null-pointer-checks -fno-strict-overflow -fsigned-char`
+- MSVC compiler warning-related compilation string (commented): `msvc_warn_str = /W4 /WX`
+- MSVC compiler other compilation flag string (commented): `msvc_f_str = /MD /EHsc /GR`
 
 ### Compile and run
 Run `pycmake.py` in the project root directory to generate `CMakeLists.txt`, then automatically compile and run tests.
